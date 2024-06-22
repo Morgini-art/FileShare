@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    font-family: monospace;
+}
+
+button {
+    font-family: monospace;
+}
+
+p {
+    margin: 0px;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+img {
+    vertical-align: middle;
+}
+
+div#context-menu {
+    padding: 5px;
+    background-color: darkgray;
+}
+
+div#ui {
+    margin: 10px 0 15px 0;
+}
+
+div#main {
+    margin: 0 auto;
+    width: 500px;
+}
+
+button.ui {
+    transition: all 0.25s;
+    background-color: white;
+    border-radius: 0;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+button.ui:hover {
+    transition: all 0.25s;
+    background-color: rgb(214, 214, 214);
+}
+
+button.menu {
+    background-color: darkgray;
+    text-align: left;
+    width: 100%;
+    border: none;
+}
+
+button.menu:hover {
+    background-color: lightblue;
+}
+
+button.unit:hover {
+    transition: all 0.25s;
+    background-color: rgb(214, 214, 214);
+}
+
+button.unit {
+    overflow-x: hidden;
+    transition: all 0.25s;
+    background-color: white;
+    text-align: left;
+    width: 250px;
+    border-radius: 0;
+    border: 0;
+    font-size: 14px;
+}
+
+p#actual-path {
+    width: 450px;
+    padding: 2px 10px;
+    margin-bottom: 8px;
+    background-color: rgb(214, 214, 214);
+    display: inline-block;
+}

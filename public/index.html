@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>FilePublic2</title>
+    <script src="socket.io.js" defer></script>
+    <script src="main.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="main">
+        <h1>FilePublic2</h1>
+        <a href="gamepad.html">Gamepad support</a>
+        <div id="ui">
+            <p id="actual-path"></p><br>
+            <button class="ui" onclick="window.location.reload()">Refresh</button>
+            <button class="ui" onclick="undo()">Undo</button>
+            <button class="ui" onclick="clearTemp()">Clear Temp</button>
+        </div>
+        <div id="content">
+
+        </div>
+    </div>
+    <div id="context-menu" style="display: none">
+        <button class="menu" onclick="openByHtml()">Open using html</button>
+    </div>
+</body>
+</html>
