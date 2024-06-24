@@ -1,0 +1,22 @@
+div#video, div#audio, div#image {
+    position: absolute;
+    display: none;
+    padding: 60px;
+    border-radius: 10px;
+    border: 2px solid black;
+    background-color: white;
+}
+
+button.video-player, button.audio-player, button.image-player {
+    border: 1px solid black;
+    top: 150px;
+    border-radius: 0;
+    background-color: white;
+    padding: 5px;
+    font-size: 14px;
+}
+
+video {
+    width: 640px;
+    height: 480px;
+}

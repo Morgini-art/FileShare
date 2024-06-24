@@ -16,16 +16,11 @@ function readAll(path) {
     return files;
 }
 
-function request(path) {
-    if (path === '_main') {
-        return loadDir(config.mount);
-    } else {
-        return loadDir(config.mount+'\\'+path);
-    }
-}
-
 function loadDir(path) {
     const result = [];
+    if (!fs.existsSync(path)) {
+        return 0;
+    }
     const base = fs.readdirSync(path);
     
     for (const unit of base) {
@@ -44,4 +39,4 @@ function loadDir(path) {
     return result;
 }
 
-module.exports = {readAll, request, loadDir};
+module.exports = {readAll, loadDir};

@@ -3,17 +3,20 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>FilePublic2</title>
+    <title>FileShare</title>
     <script src="socket.io.js" defer></script>
     <script src="main.js" defer></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href=".css/style.css">
+    <link rel="stylesheet" href=".css/media-players.css">
+    <link rel="icon" href="favicon.ico">
 </head>
 
 <body>
     <div id="main">
-        <h1>FilePublic2</h1>
+        <h1>FileShare</h1>
         <a href="gamepad.html">Gamepad support</a>
         <div id="ui">
+            <p id="temp-help">Temporary memory usage: </p>
             <p id="actual-path"></p><br>
             <button class="ui" onclick="window.location.reload()">Refresh</button>
             <button class="ui" onclick="undo()">Undo</button>
@@ -23,8 +26,22 @@
 
         </div>
     </div>
-    <div id="context-menu" style="display: none">
+    <div id="context-menu" style="display: none;">
         <button class="menu" onclick="openByHtml()">Open using html</button>
+    </div>
+    <div id="media-players">
+      <div id="video">
+          <button class="video-player" onclick="document.querySelector('div#video').style.display = 'none'; document.querySelector('video').src=''">Close</button><br>
+          <video src="" controls></video>
+      </div>
+       <div id="audio">
+          <button class="audio-player" onclick="document.querySelector('div#audio').style.display = 'none'; document.querySelector('audio').src=''">Close</button><br>
+          <audio src="" controls></audio>
+      </div>
+      <div id="image">
+          <button class="image-player" onclick="document.querySelector('div#image').style.display = 'none'; document.querySelector('img#player').src=''">Close</button><br>
+          <img id="player" src="">
+      </div>
     </div>
 </body>
 </html>
