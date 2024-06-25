@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>FileShare</title>
-    <script src="socket.io.js" defer></script>
+    <script src="socket/socket.io.js" defer></script>
     <script src="main.js" defer></script>
     <link rel="stylesheet" href=".css/style.css">
     <link rel="stylesheet" href=".css/media-players.css">
@@ -27,7 +27,7 @@
         </div>
     </div>
     <div id="context-menu" style="display: none;">
-        <button class="menu" onclick="openByHtml()">Open using html</button>
+        <button class="menu" onclick="">Option 1</button>
     </div>
     <div id="media-players">
       <div id="video">
@@ -42,6 +42,7 @@
           <button class="image-player" onclick="document.querySelector('div#image').style.display = 'none'; document.querySelector('img#player').src=''">Close</button><br>
           <img id="player" src="">
       </div>
+      <div id="embed" style="display: none"></div>
     </div>
 </body>
 </html>

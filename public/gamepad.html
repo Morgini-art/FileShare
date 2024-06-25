@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>FileShare</title>
-    <script src="socket.io.js" defer></script>
+    <script src="socket/socket.io.js" defer></script>
     <script src="main-gamepad.js" defer></script>
     <link rel="icon" href="favicon.ico">
     <link rel="stylesheet" href=".css/style.css">
@@ -15,7 +15,7 @@
     <div id="main">
         <h1>FileShare</h1>
         <a href="index.html">Standard</a>
-        <p id="gamepad-help">Gamepad status: not detected :(</p>
+        <p id="gamepad-help">Gamepad status: not detected</p>
         <div id="ui">
             <p id="temp-help">Temporary memory usage: </p>
             <p id="actual-path"></p><br>
@@ -44,6 +44,7 @@
           <button class="image-player" onclick="document.querySelector('div#image').style.display = 'none'; document.querySelector('img#player').src=''">Close</button><br>
           <img id="player" src="">
       </div>
+      <div id="embed" style="display: none"></div>
     </div>
 </body>
 <style>

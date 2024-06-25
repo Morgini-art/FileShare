@@ -23,10 +23,12 @@ let gamepad = null;
 let gamepadButtonReload = false;
 
 let gamepadCursor = 0;
-let lastGamepadCursor = 0;
+let lastGamepadCursor = -1;
 let cursorButton = 0;
 let extraSpeedCounter = 0;
 let extraInterval = 0;
+let opendedPdf = false;
+let actualVideoName;
 
 const gamepadButtons = {
     groupA: [0, 0, 0, 0],
@@ -35,8 +37,7 @@ const gamepadButtons = {
 
 window.addEventListener('gamepadconnected', (e) => {
     gamepad = e.gamepad;
-    console.log(gamepad);
-    gamepadHelp.innerHTML = 'Gamepad status: detected :)';
+    gamepadHelp.innerHTML = 'Gamepad status: detected';
 });
 
 setInterval(loop, 25);
@@ -72,18 +73,13 @@ socket.on('temp-size', data=>{
 function changeVideo(delta, name) {//TODO: When delta < 0 it doesn't takes nearest video file.
     const actual = content.findIndex((e)=>e.name === name && e.type === 1);
     const firstSimilar = content.findIndex((e, index) => {
-        console.log(e, index);
         let direction = false;
         if (delta > 0 && index - actual > 0 || delta < 0 && index - actual < 0) {
             direction = true;
         }
-        console.log(e.name.split('.')[e.name.split('.').length-1]);
-        console.log(database.fileFormats.video.includes(e.name.split('.')[e.name.split('.').length-1]), direction);
         return database.fileFormats.video.includes(e.name.split('.')[e.name.split('.').length-1]) && e.name !== name && direction;
     });
-    console.warn('Choice:', content[firstSimilar]);
     if (firstSimilar < content.length && firstSimilar !== -1) {
-        console.log('Loading:', content[firstSimilar]);
         document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
         socket.emit('request-file', {
             path: content[firstSimilar].path,
@@ -103,7 +99,6 @@ function loop() {
         
         if (buttons[0].pressed) {
             if (!gamepadButtonReload) {
-                console.log('Button 0 -> A');
                 gamepadButtonReload = true;
                 gamepadButtons.groupA[0] = 1;
                 const obj = content[gamepadCursor];
@@ -113,21 +108,18 @@ function loop() {
             }
         } else if (buttons[1].pressed) {
             if (!gamepadButtonReload) {
-                console.log('Button 1 -> B');
                 gamepadButtonReload = true;
                 gamepadButtons.groupA[1] = 1;
                 undo();
             }
         } else if (buttons[2].pressed) {
             if (!gamepadButtonReload) {
-                console.log('Button 2 -> X');
                 gamepadButtonReload = true;
                 gamepadButtons.groupA[2] = 1;
                 clearTemp();
             }
         } else if (buttons[3].pressed) {
             if (!gamepadButtonReload) {
-                console.log('Button 3 -> Y');
                 gamepadButtonReload = true;
                 gamepadButtons.groupA[3] = 1;
                 window.location.reload()
@@ -191,6 +183,20 @@ function loop() {
             gamepadButtons.groupA.fill(0,0,4);
         }
         
+        if (opendedPdf) {
+            if (buttons[6].value > 0.15) {
+                window.scrollBy({top:-buttons[6].value*100, left:0, behavior:"smooth"});
+            } else if (buttons[7].value > 0.15) {
+                window.scrollBy({top:buttons[7].value*100, left:0, behavior:"smooth"});
+            }
+            
+            if (buttons[4].pressed) {
+                window.scrollBy({top:-(window.innerHeight/2-100), left:0, behavior:"smooth"});
+            } else if (buttons[5].pressed) {
+                window.scrollBy({top:window.innerHeight/2-100, left:0, behavior:"smooth"});
+            }
+        }
+        
         if (lastGamepadCursor !== gamepadCursor) {
             lastGamepadCursor = gamepadCursor;
             const htmlButtons = document.querySelectorAll('button.unit');
@@ -235,7 +241,7 @@ document.body.addEventListener('mousedown', ()=>{
 });
 
 socket.on('connect', ()=>{
-    console.log('Connected to server.');
+    console.info('Connected to server.');
     sendRequest(actualPath);
 });
 
@@ -244,21 +250,30 @@ socket.on('reset-cookies', ()=>{
 });
 
 socket.on('recieve-data', (data)=>{
-    console.log(data);
+    console.info('Recieved list of files. Path:', data.path, ' Array:', data.list);
     actualPathHtml.innerHTML = 'Path:\\\\'+data.path;
     actualPath = data.path;
     content = data.list;
     document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
     let res = '<table>';
+    lastGamepadCursor = -1;
     
-    for (const el of data.list) {
-        if (el.type === 0) {
-            res += `<p><img src='ui/folder.png'><button onclick="enter('${el.name}',0)" class="unit">${el.name}</button></p>`;
+    const files = [];
+    const folders = content.filter((e)=>{
+        if (e.type === 0) {
+            return true;
         } else {
-            const t = el.name.split('.');
-            res += `<p><img src='ui/file.png'><button onclick="enter('${el.name}',1)" class="unit">${el.name}</button>${el.size}</p>`;
+            files.push(e);
         }
+    });
+    
+    for (const folder of folders) {
+        res += `<p><img src='ui/folder.png'><button onclick="enter('${folder.name}',0)" class="unit">${folder.name}</button></p>`;
     }
+    for (const file of files) {
+        res += `<p><img src='ui/file.png'><button onclick="enter('${file.name}',1)" class="unit">${file.name}</button>${file.size}</p>`;
+    }
+    
     contentHtml.innerHTML = res;
     
     document.querySelectorAll('button.unit').forEach(button => {
@@ -273,22 +288,36 @@ socket.on('recieve-data', (data)=>{
     });
 });
 
-let actualVideoName;
 socket.on('file-sent',(data)=>{
     /*window.location.href = e;*/
     //New concept: Built in video, music, image player.
     const {path, name} = data;
     
     const split = name.split('.');
-    console.log(path, name);
-    console.log('New file recieved.');
+    const extension = split[split.length - 1].toLowerCase();
+    console.info('Recieved new file. File name: ', name);
+    opendedPdf = false;
     
-    if (database.fileFormats.video.includes(split[split.length-1].toLowerCase())) {
+    if (database.fileFormats.video.includes(extension)) {
+        if (videoPlayerHtml.currentSrc.includes('_preview')) {
+            previewTime = videoPlayerHtml.currentTime;
+        } else {
+            previewTime = 0;
+        }
         builtInVideoPlayer(data);
-    } else if (database.fileFormats.audio.includes(split[split.length-1].toLowerCase())) {
+    } else if (database.fileFormats.audio.includes(extension)) {
         builtInAudioPlayer(data);
-    } else if (database.fileFormats.image.includes(split[split.length-1].toLowerCase())) {
+    } else if (database.fileFormats.image.includes(extension)) {
         builtInImagePlayer(data);
+    } else if (extension === 'pdf') {
+        const embedHtml = document.querySelector('div#embed');
+        embedHtml.innerHTML = `<iframe width="${window.innerWidth-70}" height="10000px" src="${path}"></iframe>`;
+        embedHtml.style.display = 'block';
+        embedHtml.style.position = 'absolute';
+        embedHtml.style.top = 100+'px';
+        embedHtml.style.left = 0;
+        embedHtml.width = window.innerWidth;
+        opendedPdf = true;
     } else {
         window.location.href = path;
     }
@@ -317,9 +346,7 @@ function builtInVideoPlayer(data) {
         
     if (settings.video.autoplay) {
         videoPlayerHtml.onended = () => {
-            console.log('Autoplay on.');
-            console.log(content);
-            console.log(name);
+            console.info('Autoplay on.');
             changeVideo(1, actualVideoName);
         }
     }
@@ -338,7 +365,6 @@ function builtInImagePlayer(data) {
     const {path, name} = data;
     
     imagePlayerHtml.src = path;
-    console.log(data, imagePlayerHtml);
     imageDivHtml.style.left = '0px';
     imageDivHtml.style.top = '0px';
     imageDivHtml.style.display = 'block';

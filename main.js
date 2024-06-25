@@ -1,23 +1,29 @@
 const fs = require('fs');
-const crossSpawn = require('cross-spawn');
-const config = require('./config.json');
-const { createServer } = require('node:http');
 const express = require('express');
-const {Server} = require('socket.io');
-const {loadDir, readAll} = require('./file');
 const path = require('path');
+const crossSpawn = require('cross-spawn');
+const {createServer} = require('node:http');
+const {Server} = require('socket.io');
+const {statfsSync} = require('fs');
+
+const config = require('./config.json');
+const {loadDir, readAll} = require('./file');
 
 const PORT = 3000;
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {transports:['websocket']});
 
-const {statfsSync} = require('fs');
+server.listen(PORT, () => {
+    console.info(`Server running at ${PORT}`);
+    console.info(`Mounted at: ${config.mount}`);
+});
 
-function getDiscFreeSpace(path) {//Result in GB
-    const s = statfsSync('H:\\');
-    return ((s.bsize*s.bfree)/1024/1024/1024).toFixed(2);
-}
+app.use(express.static(path.join(__dirname, 'public')))
+ 
+app.get('/', function (req, res, next) {
+    res.render('index.html');
+});
 
 io.on('connection', (socket) => {
     socket.emit('temp-size', getTempFolderStats());
@@ -34,26 +40,25 @@ io.on('connection', (socket) => {
     
     socket.on('request-file', (data)=>{
         const path = data.path.replace('_main', config.mount);
-        if (fs.lstatSync(path).size/1024/1024 > 500) {
-            console.log('Big file.')
-            console.log('Spawn ffmpeg process.')
-            const spawn = crossSpawn.spawn(`ffmpeg -i "${path}" -t 45 -acodec copy -vcodec copy "public\\temp\\_preview${data.name}"`);
+        if (fs.lstatSync(path).size/1024/1024 > 512) {
+            console.info('Huge file. Spawning ffmpeg process.');
+            const spawn = crossSpawn.spawn(`ffmpeg -i -y "${path}" -t 45 -acodec copy -vcodec copy "public\\temp\\_preview${data.name}"`);
             spawn._handle.onexit = () => {
                 socket.emit('file-sent', {path:'\\temp\\_preview'+data.name, name:'_preview'+data.name});
                 
-                console.log('Copying file');
+                console.info('Copying file');
                 fs.copyFile(data.path.replace('_main',config.mount),'public\\temp\\'+data.name, (e)=>{
                     socket.emit('temp-size', getTempFolderStats());
                     socket.emit('file-sent', {path:'\\temp\\'+data.name, name:data.name});
-                    console.log('Copying file has been ended');
+                    console.info('Copying file has been completed');
                 });
             }
         } else {
-            console.log('Copying file');
+            console.info('Copying file');
             fs.copyFile(data.path.replace('_main', config.mount), 'public\\temp\\' + data.name, (e) => {
                 socket.emit('temp-size', getTempFolderStats());
                 socket.emit('file-sent', {path: '\\temp\\' + data.name,name: data.name});
-                console.log('Copying file has been ended');
+                console.info('Copying file has been completed');
             });
         }
     });
@@ -87,6 +92,12 @@ function getTempFolderStats() {
     return {size: 0, free:getDiscFreeSpace('H:\\')};
 }
 
+//Result in GB
+function getDiscFreeSpace(path) {
+    const s = statfsSync('H:\\');
+    return ((s.bsize*s.bfree)/1024/1024/1024).toFixed(2);
+}
+
 function request(path) {
     if (path === '_main') {
         return loadDir(config.mount);
@@ -98,15 +109,3 @@ function request(path) {
         return v;
     }
 }
-
-server.listen(3000, /*'192.168.0.3',*/() => {
-  console.log('Server running at 3000');
-});
-
-app.use(express.static(path.join(__dirname, 'public')))
- 
-app.get('/', function (req, res, next) {
-    res.render('index.html');
-});
-
-console.log('Mounted at: '+config.mount);

@@ -35,45 +35,23 @@ imagePlayerHtml.width = 1000;
 
 let contextMenuTarget;
 
+//Video
+let actualVideoName;
+let previewTime = 0;
 const tempHtml = document.querySelector('p#temp-help');
+
+document.body.addEventListener('mousedown', ()=>{
+    if (contextMenuHtml.style.display === 'block') {
+        setTimeout(()=>{contextMenuHtml.style.display = 'none'}, 250);
+    }
+});
+
 socket.on('temp-size', data=>{
     tempHtml.innerHTML = `Temporary memory usage: ${data.size}/${data.free} GB`;
 });
 
-function changeVideo(delta, name) {//TODO: When delta < 0 it doesn't takes nearest video file.
-    const actual = content.findIndex((e)=>e.name === name && e.type === 1);
-    const firstSimilar = content.findIndex((e, index) => {
-        console.log(e, index);
-        let direction = false;
-        if (delta > 0 && index - actual > 0 || delta < 0 && index - actual < 0) {
-            direction = true;
-        }
-        console.log(e.name.split('.')[e.name.split('.').length-1]);
-        console.log(database.fileFormats.video.includes(e.name.split('.')[e.name.split('.').length-1]), direction);
-        return database.fileFormats.video.includes(e.name.split('.')[e.name.split('.').length-1]) && e.name !== name && direction;
-    });
-    console.warn('Choice:', content[firstSimilar]);
-    if (firstSimilar < content.length && firstSimilar !== -1) {
-        console.log('Loading:', content[firstSimilar]);
-        document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
-        socket.emit('request-file', {
-            path: content[firstSimilar].path,
-            name: content[firstSimilar].name
-        });
-    } else {
-        document.querySelector('div#video').style.display = 'none';
-        document.querySelector('video').src = "";
-    }
-}
-
-document.body.addEventListener('mousedown', ()=>{
-    if (contextMenuHtml.style.display === 'block') {
-        setTimeout(()=>{contextMenuHtml.style.display = 'none'},500);
-    }
-});
-
 socket.on('connect', ()=>{
-    console.log('Connected to server.');
+    console.info('Connected to server.');
     sendRequest(actualPath);
 });
 
@@ -82,21 +60,29 @@ socket.on('reset-cookies', ()=>{
 });
 
 socket.on('recieve-data', (data)=>{
-    console.log(data);
+    console.info('Recieved list of files. Path:', data.path, ' Array:', data.list);
     actualPathHtml.innerHTML = 'Path:\\\\'+data.path;
     actualPath = data.path;
     content = data.list;
     document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
     let res = '<table>';
     
-    for (const el of data.list) {
-        if (el.type === 0) {
-            res += `<p><img src='ui/folder.png'><button onclick="enter('${el.name}',0)" class="unit">${el.name}</button></p>`;
+    const files = [];
+    const folders = content.filter((e)=>{
+        if (e.type === 0) {
+            return true;
         } else {
-            const t = el.name.split('.');
-            res += `<p><img src='ui/file.png'><button onclick="enter('${el.name}',1)" class="unit">${el.name}</button>${el.size}</p>`;
+            files.push(e);
         }
+    });
+    
+    for (const folder of folders) {
+        res += `<p><img src='ui/folder.png'><button onclick="enter('${folder.name}',0)" class="unit">${folder.name}</button></p>`;
     }
+    for (const file of files) {
+        res += `<p><img src='ui/file.png'><button onclick="enter('${file.name}',1)" class="unit">${file.name}</button>${file.size}</p>`;
+    }
+    
     contentHtml.innerHTML = res;
     
     document.querySelectorAll('button.unit').forEach(button => {
@@ -111,31 +97,57 @@ socket.on('recieve-data', (data)=>{
     });
 });
 
-let actualVideoName;
-let previewTime = 0;
 socket.on('file-sent',(data)=>{
-    /*window.location.href = e;*/
-    //New concept: Built in video, music, image player.
     const {path, name} = data;
     
     const split = name.split('.');
-    console.log(path, name);
+    const extension = split[split.length - 1].toLowerCase();
+    console.info('Recieved new file. File name: ', name);
     
-    if (database.fileFormats.video.includes(split[split.length-1].toLowerCase())) {
+    if (database.fileFormats.video.includes(extension)) {
         if (videoPlayerHtml.currentSrc.includes('_preview')) {
             previewTime = videoPlayerHtml.currentTime;
         } else {
             previewTime = 0;
         }
         builtInVideoPlayer(data);
-    } else if (database.fileFormats.audio.includes(split[split.length-1].toLowerCase())) {
+    } else if (database.fileFormats.audio.includes(extension)) {
         builtInAudioPlayer(data);
-    } else if (database.fileFormats.image.includes(split[split.length-1].toLowerCase())) {
+    } else if (database.fileFormats.image.includes(extension)) {
         builtInImagePlayer(data);
+    } else if (extension === 'pdf') {
+        const embedHtml = document.querySelector('div#embed');
+        embedHtml.innerHTML = `<iframe width="${window.innerWidth-70}" height="10000px" src="${path}"></iframe>`;
+        embedHtml.style.display = 'block';
+        embedHtml.style.position = 'absolute';
+        embedHtml.style.top = 100+'px';
+        embedHtml.style.left = 0;
+        embedHtml.width = window.innerWidth;
     } else {
         window.location.href = path;
     }
 });
+
+function changeVideo(delta, name) {//TODO: When delta < 0 it doesn't takes nearest video file.
+    const actual = content.findIndex((e)=>e.name === name && e.type === 1);
+    const firstSimilar = content.findIndex((e, index) => {
+        let direction = false;
+        if (delta > 0 && index - actual > 0 || delta < 0 && index - actual < 0) {
+            direction = true;
+        }
+        return database.fileFormats.video.includes(e.name.split('.')[e.name.split('.').length-1]) && e.name !== name && direction;
+    });
+    if (firstSimilar < content.length && firstSimilar !== -1) {
+        document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
+        socket.emit('request-file', {
+            path: content[firstSimilar].path,
+            name: content[firstSimilar].name
+        });
+    } else {
+        document.querySelector('div#video').style.display = 'none';
+        document.querySelector('video').src = "";
+    }
+}
 
 function enter(name, type, html=false) {
     if (type === 0) {
@@ -151,7 +163,7 @@ function builtInVideoPlayer(data) {
     const {path, name} = data;
     
     videoPlayerHtml.src = path;
-    videoDivHtml.style.left = (window.innerWidth - 640) / 2+'px';
+    videoDivHtml.style.left = (window.innerWidth - 640) / 2 + 'px';
     videoDivHtml.style.top = '50px';
     videoDivHtml.style.display = 'block';
     videoPlayerHtml.currentTime = previewTime;
@@ -160,9 +172,7 @@ function builtInVideoPlayer(data) {
     
     if (settings.video.autoplay) {
         videoPlayerHtml.onended = () => {
-            console.log('Autoplay on.');
-            console.log(content);
-            console.log(name);
+            console.info('Autoplay on.');
             changeVideo(1, actualVideoName);
         }
     }
@@ -172,7 +182,7 @@ function builtInAudioPlayer(data) {
     const {path, name} = data;
     
     audioPlayerHtml.src = path;
-    audioDivHtml.style.left = (window.innerWidth - 300) / 2 +'px';
+    audioDivHtml.style.left = (window.innerWidth - 300) / 2 + 'px';
     audioDivHtml.style.top = '50px';
     audioDivHtml.style.display = 'block';
 }
@@ -181,15 +191,9 @@ function builtInImagePlayer(data) {
     const {path, name} = data;
     
     imagePlayerHtml.src = path;
-    console.log(data, imagePlayerHtml);
     imageDivHtml.style.left = '0px';
     imageDivHtml.style.top = '0px';
     imageDivHtml.style.display = 'block';
-}
-
-function openByHtml() {
-    const arg = contextMenuTarget.attributes.onclick.value;
-    enter(arg.substring(arg.indexOf("'")+1,arg.lastIndexOf("'")), arg.substr(arg.indexOf(',')+1,1), true);
 }
 
 function undo() {
