@@ -19,4 +19,4 @@ node main.js
 ```
 Remember, be sure that you run this command for the file in main folder (it is FileShare) not folder \public. Finally you can open your browser and type appropriate address depending on the changes above you made above. When page is loaded you see a FileShare client (for more info look below).
 ## How to use from the client
-FileShare client is special client that allows you browse files, just like in a file explorer, and open these files. For now FileShare mainly support video files (except .avi, .mkv, .flv), but it can also open some audio and image files.
+FileShare client is special client that allows you browse files, just like in a file explorer, and open these files. For now FileShare mainly support video files (in example except .flv), but it can also open some audio and image files.
