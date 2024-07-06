@@ -65,6 +65,10 @@ function enterByButton() {
     }
 }
 
+socket.on('processing-progress', progress=>{
+    progressDiv.style.width = (470*progress)+'px';
+});
+
 const tempHtml = document.querySelector('p#temp-help');
 socket.on('temp-size', data=>{
     tempHtml.innerHTML = `Temporary memory usage: ${data.size}/${data.free} GB`;
@@ -230,6 +234,8 @@ const videoDivHtml = document.querySelector('div#video');
 const audioDivHtml = document.querySelector('div#audio');
 const imageDivHtml = document.querySelector('div#image');
 
+const progressDiv = document.querySelector('div#progress');
+
 imagePlayerHtml.width = 1000;
 
 let contextMenuTarget;
@@ -293,6 +299,7 @@ socket.on('file-sent',(data)=>{
     //New concept: Built in video, music, image player.
     const {path, name} = data;
     
+    progressDiv.style.width = 0;
     const split = name.split('.');
     const extension = split[split.length - 1].toLowerCase();
     console.info('Recieved new file. File name: ', name);
@@ -311,7 +318,7 @@ socket.on('file-sent',(data)=>{
         builtInImagePlayer(data);
     } else if (extension === 'pdf') {
         const embedHtml = document.querySelector('div#embed');
-        embedHtml.innerHTML = `<iframe width="${window.innerWidth-70}" height="10000px" src="${path}"></iframe>`;
+        embedHtml.innerHTML = `<iframe width="${window.innerWidth-70}" height="1500px" src="${path}"></iframe>`;
         embedHtml.style.display = 'block';
         embedHtml.style.position = 'absolute';
         embedHtml.style.top = 100+'px';

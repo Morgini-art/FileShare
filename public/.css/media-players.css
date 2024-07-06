@@ -7,16 +7,40 @@ div#video, div#audio, div#image {
     background-color: white;
 }
 
+div#video {
+    background-color: black;
+    padding: 0;
+}
+
+p#video-title {
+    position: absolute;
+    color: white;
+    font-size: 20px;
+    margin-top: 20px;
+    margin-left: 50px;
+}
+
 button.video-player, button.audio-player, button.image-player {
     border: 1px solid black;
-    top: 150px;
     border-radius: 0;
     background-color: white;
-    padding: 5px;
     font-size: 14px;
 }
 
 video {
     width: 640px;
     height: 480px;
+}
+
+button.video-player {
+    display: block;
+    position: absolute;
+    right: 5px;
+    font-size: 20px;
+    background-color: black;
+    color: white;
+}
+
+button.video-player:hover {
+    border: 1px solid white;
 }

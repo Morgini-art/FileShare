@@ -31,6 +31,9 @@ const videoDivHtml = document.querySelector('div#video');
 const audioDivHtml = document.querySelector('div#audio');
 const imageDivHtml = document.querySelector('div#image');
 
+const progressDiv = document.querySelector('div#progress');
+const tempHtml = document.querySelector('p#temp-help');
+
 imagePlayerHtml.width = 1000;
 
 let contextMenuTarget;
@@ -38,7 +41,7 @@ let contextMenuTarget;
 //Video
 let actualVideoName;
 let previewTime = 0;
-const tempHtml = document.querySelector('p#temp-help');
+const videoTitle = document.querySelector('p#video-title');
 
 document.body.addEventListener('mousedown', ()=>{
     if (contextMenuHtml.style.display === 'block') {
@@ -97,12 +100,17 @@ socket.on('recieve-data', (data)=>{
     });
 });
 
+socket.on('processing-progress', progress=>{
+    progressDiv.style.width = (470*progress)+'px';
+});
+
 socket.on('file-sent',(data)=>{
     const {path, name} = data;
     
     const split = name.split('.');
     const extension = split[split.length - 1].toLowerCase();
     console.info('Recieved new file. File name: ', name);
+    progressDiv.style.width = 0;
     
     if (database.fileFormats.video.includes(extension)) {
         if (videoPlayerHtml.currentSrc.includes('_preview')) {
@@ -162,10 +170,18 @@ function enter(name, type, html=false) {
 function builtInVideoPlayer(data) {
     const {path, name} = data;
     
-    videoPlayerHtml.src = path;
-    videoDivHtml.style.left = (window.innerWidth - 640) / 2 + 'px';
-    videoDivHtml.style.top = '50px';
+    document.body.requestFullscreen();
+    
+    const d = name.split('.');
+    d.pop();
+    videoTitle.innerHTML = d.join('.');
     videoDivHtml.style.display = 'block';
+    videoPlayerHtml.src = path;
+    videoDivHtml.style.left = '0px';
+    videoDivHtml.style.top = '0px';
+    videoPlayerHtml.style.width = window.innerWidth+'px';
+    videoPlayerHtml.style.height = window.innerHeight+'px';
+    
     videoPlayerHtml.currentTime = previewTime;
     videoPlayerHtml.play();
     actualVideoName = name;

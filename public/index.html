@@ -17,6 +17,7 @@
         <a href="gamepad.html">Gamepad support</a>
         <div id="ui">
             <p id="temp-help">Temporary memory usage: </p>
+            <div id="progress"></div>
             <p id="actual-path"></p><br>
             <button class="ui" onclick="window.location.reload()">Refresh</button>
             <button class="ui" onclick="undo()">Undo</button>
@@ -31,7 +32,8 @@
     </div>
     <div id="media-players">
       <div id="video">
-          <button class="video-player" onclick="document.querySelector('div#video').style.display = 'none'; document.querySelector('video').src=''">Close</button><br>
+          <p id="video-title">Title</p>
+          <button class="video-player" onclick="document.querySelector('div#video').style.display = 'none'; document.exitFullscreen();document.querySelector('video').src=''">Close</button><br>
           <video src="" controls></video>
       </div>
        <div id="audio">

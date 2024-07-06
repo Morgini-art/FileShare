@@ -133,3 +133,5 @@ dist
 # My
 .svg
 *.svg
+
+codecs.txt
