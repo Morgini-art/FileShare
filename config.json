@@ -1,3 +1,5 @@
 {
-    "mount": "I:\\"
+    "mount": "I:\\",
+    "ip": "localhost",
+    "port": 3000
 }

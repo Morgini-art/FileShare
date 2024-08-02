@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2">
     <title>FileShare</title>
     <script src="socket/socket.io.js" defer></script>
     <script src="main.js" defer></script>
@@ -19,6 +20,7 @@
             <p id="temp-help">Temporary memory usage: </p>
             <div id="progress"></div>
             <p id="actual-path"></p><br>
+            <input id="search" type="text" placeholder="Search..."><button id="submit">Search</button><br>
             <button class="ui" onclick="window.location.reload()">Refresh</button>
             <button class="ui" onclick="undo()">Undo</button>
             <button class="ui" onclick="clearTemp()">Clear Temp</button>

@@ -3,9 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2">
     <title>FileShare</title>
     <script src="socket/socket.io.js" defer></script>
-    <script src="main-gamepad.js" defer></script>
+    <script src="main.js" defer></script>
+    <script src="gamepad.js" defer></script>
     <link rel="icon" href="favicon.ico">
     <link rel="stylesheet" href=".css/style.css">
     <link rel="stylesheet" href=".css/media-players.css">
@@ -20,6 +22,7 @@
             <p id="temp-help">Temporary memory usage: </p>
             <div id="progress"></div>
             <p id="actual-path"></p><br>
+            <input id="search" type="text" placeholder="Search..."><button id="submit">Search</button><br>
             <button class="ui" onclick="enterByButton()">Open <img src="ui/gamepad/button0.png"></button>
             <button class="ui" onclick="undo()">Undo <img src="ui/gamepad/button1.png"></button>
             <button class="ui" onclick="clearTemp()">Clear Temp <img src="ui/gamepad/button2.png"></button>
@@ -34,6 +37,7 @@
     </div>
     <div id="media-players">
       <div id="video">
+          <p id="video-title">Title</p>
           <button class="video-player" onclick="document.querySelector('div#video').style.display = 'none'; document.querySelector('video').src=''">Close</button><br>
           <video src="" controls></video>
       </div>

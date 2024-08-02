@@ -3,6 +3,15 @@ body {
     font-family: monospace;
 }
 
+input#search {
+    margin-bottom: 5px;
+    width: 80%;
+}
+
+button#submit {
+    margin-left: 5px;
+}
+
 button {
     font-family: monospace;
 }
@@ -17,7 +26,7 @@ a {
 }
 
 img {
-    vertical-align: middle;
+    vertical-align: top;
 }
 
 div#context-menu {
@@ -87,4 +96,28 @@ p#actual-path {
     margin-bottom: 8px;
     background-color: rgb(214, 214, 214);
     display: inline-block;
+}
+
+p#actual-path > span {
+    margin-right: 2px;
+    background-color: black;
+}
+
+
+@media (max-width: 1280px), screen and (orientation: portrait) {
+    div#main {
+        width: 95%;
+    }
+    
+    p#actual-path {
+        width: 95%;
+    }
+    
+    button.unit {
+        width: 80%;
+    }
+    
+    body {
+        margin-left: 10px;
+    }
 }

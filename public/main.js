@@ -34,6 +34,13 @@ const imageDivHtml = document.querySelector('div#image');
 const progressDiv = document.querySelector('div#progress');
 const tempHtml = document.querySelector('p#temp-help');
 
+const searchButton = document.querySelector('button#submit');
+const searchInput = document.querySelector('input#search');
+
+searchButton.onclick = () => {
+    socket.emit('search', {text:searchInput.value, path: actualPath});
+};
+
 imagePlayerHtml.width = 1000;
 
 let contextMenuTarget;
@@ -64,7 +71,9 @@ socket.on('reset-cookies', ()=>{
 
 socket.on('recieve-data', (data)=>{
     console.info('Recieved list of files. Path:', data.path, ' Array:', data.list);
-    actualPathHtml.innerHTML = 'Path:\\\\'+data.path;
+    const paths = data.path.split('\\');
+    let mem = '';
+    actualPathHtml.innerHTML = data.path;
     actualPath = data.path;
     content = data.list;
     document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
@@ -80,10 +89,16 @@ socket.on('recieve-data', (data)=>{
     });
     
     for (const folder of folders) {
-        res += `<p><img src='ui/folder.png'><button onclick="enter('${folder.name}',0)" class="unit">${folder.name}</button></p>`;
+        res += `<p><img src='ui/folder.png'><button onclick="enter('${folder.path.replace(/\\/g, '\\\\')}',0,'${folder.name}')" class="unit">${folder.name}</button></p>`;
     }
     for (const file of files) {
-        res += `<p><img src='ui/file.png'><button onclick="enter('${file.name}',1)" class="unit">${file.name}</button>${file.size}</p>`;
+        const percent = (file.points/data.list[0].points*100).toFixed(1);
+        res += `<p><img src='ui/file.png'><button onclick="enter('${file.path.replace(/\\/g, '\\\\')}',1,'${file.name}')" class="unit">${file.name}</button>${file.size}`;
+        if (file.points!==undefined) {
+            res+=` ${percent}%</p>`;
+        } else {
+            res+='</p>';
+        }
     }
     
     contentHtml.innerHTML = res;
@@ -157,13 +172,13 @@ function changeVideo(delta, name) {//TODO: When delta < 0 it doesn't takes neare
     }
 }
 
-function enter(name, type, html=false) {
+function enter(path, type, name) {
+    console.log(path);
     if (type === 0) {
-        sendRequest(actualPath+'\\'+name);
+        sendRequest(path);
     } else {
-        const split = name.split('.');
         document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
-        socket.emit('request-file', {path:actualPath+'\\'+name, name:name});
+        socket.emit('request-file', {path:path, name:name});
     }
 }
 
@@ -223,5 +238,6 @@ function clearTemp() {
 }
 
 function sendRequest(path) {
+    console.warn('REQUEST:', path);
     socket.emit('request', path);
 }
