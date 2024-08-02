@@ -5,18 +5,18 @@ To start you need to run program using Node.js (if you don't have installed this
 ```
 npm install
 ```
-Then open file main.js from the main directory and then scroll to last fives lines:
+Then open file config.json from the main directory:
 ```
-const PORT = 3000;
-server.listen(PORT, () => {
-    console.info(`Server running at ${PORT}`);
-    console.info(`Mounted at: ${config.mount}`);
-});
+{
+    "mount": "I:\\",
+    "ip": "localhost",
+    "port": 3000
+}
 ```
-At first now if you'd like to start a server at port in example 5304, you have to change line `const PORT = 3000;` to `const PORT = 5304`. Secondly if you want to start server at localhost don't change anything, otherwise if you want start server at specific ip addres i.e. `192.168.0.10`, change line `server.listen(PORT, () [...]` to `server.listen(PORT, '192.168.0.10, () [...]'`. At end you have to define your folder/disc that you want to share. To do this open file config.json and at value "mount" type your path to folder/disc. In the place of sign After this you can start the server by typing following command:
+You can change this file as you want. After this you can start the server by typing following command:
 ```
 node main.js
 ```
 Remember, be sure that you run this command for the file in main folder (it is FileShare) not folder \public. Finally you can open your browser and type appropriate address depending on the changes above you made above. When page is loaded you see a FileShare client (for more info look below).
 ## How to use from the client
-FileShare client is special client that allows you browse files, just like in a file explorer, and open these files. For now FileShare mainly support video files (in example except .flv), but it can also open some audio and image files.
+FileShare client is special client that allows you browse (and open them but not edit) files, just like in a file explorer, and open these files. For now FileShare mainly support video files (in example except .flv), but it can also open some audio and image files.
