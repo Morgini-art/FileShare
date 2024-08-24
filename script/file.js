@@ -2,6 +2,8 @@ const { isHiddenFile } = require('@freik/is-hidden-file');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
+const config = JSON.parse(fs.readFileSync('./config.json', {encoding: 'utf-8'}));
+
 const fsP = require('fs').promises;
 const path = require('path');
 
@@ -34,7 +36,7 @@ async function readAll(dir) {
 
 function loadDir(path) {
     const result = [];
-    if (!fs.existsSync(path)) {
+    if (!fs.existsSync(path) || !path.startsWith(config.mount)) {
         return 0;
     }
     const base = fs.readdirSync(path);
@@ -54,7 +56,6 @@ function loadDir(path) {
             }
         }
     }
-    console.log('Path request:', path);
     return result;
 }
 

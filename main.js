@@ -36,7 +36,6 @@ io.on('connection', (socket) => {
     });
     
     socket.on('request-file', (data) => {
-        console.log(data, data.path);
         const videoFile = requestVideoFile(data, socket);
 
         videoFile.then(e => {

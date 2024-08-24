@@ -21,7 +21,6 @@ window.addEventListener('gamepadconnected', (e) => {
 
 setInterval(() => {
     if (cursorButton) {
-        gamepadButtonReload = false;
         extraSpeedCounter += 200;
     }
     if (extraSpeedCounter > 2000 && extraInterval === 0) {
@@ -42,111 +41,104 @@ function enterByButton() {
     }
 }
 
+function gamepadButton(id) {
+    if (!gamepadButtonReload && gamepad.buttons[id].pressed) {
+        gamepadButtonReload = true;
+        return true;
+    }
+    return false;
+}
+
 function loop() {
     gamepad = navigator.getGamepads()[0];
     if (gamepad !== undefined && gamepad !== null && content.length !== undefined) {
         const {buttons} = gamepad;
         let text = '';
         
-        if (buttons[0].pressed) {
-            if (!gamepadButtonReload) {
-                gamepadButtonReload = true;
-                gamepadButtons.groupA[0] = 1;
-                const obj = content[gamepadCursor];
-                enter(obj.path, obj.type, obj.name);
-                gamepadCursor = 0;
-                lastGamepadCursor = -1;
-            }
-        } else if (buttons[1].pressed) {
-            if (!gamepadButtonReload) {
-                gamepadButtonReload = true;
-                gamepadButtons.groupA[1] = 1;
-                undo();
-            }
-        } else if (buttons[2].pressed) {
-            if (!gamepadButtonReload) {
-                gamepadButtonReload = true;
-                gamepadButtons.groupA[2] = 1;
-                clearTemp();
-            }
-        } else if (buttons[3].pressed) {
-            if (!gamepadButtonReload) {
-                gamepadButtonReload = true;
-                gamepadButtons.groupA[3] = 1;
-                window.location.reload()
-            }
-        } else if (buttons[13].pressed) {
-            if (!gamepadButtonReload && gamepadCursor < content.length-1) {
-                gamepadButtonReload = true;
+        if (gamepadButton(0)) {
+            gamepadButtons.groupA[0] = 1;
+            const obj = content[gamepadCursor];
+            enter(obj.path, obj.type, obj.name);
+            gamepadCursor = 0;
+            lastGamepadCursor = -1;
+        } else if (gamepadButton(1)) {
+            gamepadButtons.groupA[1] = 1;
+            undo();
+        } else if (gamepadButton(2)) {
+            gamepadButtons.groupA[2] = 1;
+            clearTemp();
+        } else if (gamepadButton(3)) {
+            gamepadButtons.groupA[3] = 1;
+            window.location.reload();
+        } else if (gamepadButton(13)) {
+            if (gamepadCursor < content.length-1) {
                 cursorButton = true;
                 gamepadCursor++;
+            } else {
+                gamepadButtonReload = false;
             }
-        } else if (buttons[12].pressed) {
-            if (!gamepadButtonReload && gamepadCursor > 0) {
-                gamepadButtonReload = true;
+        } else if (gamepadButton(12)) {
+            if (gamepadCursor > 0) {
                 cursorButton = true;
                 gamepadCursor--;
+            } else {
+                gamepadButtonReload = false;
             }
-        } else if (buttons[11].pressed && videoPlayerHtml.currentSrc !== "") {
-            if (!gamepadButtonReload) {
+        } else if (!gamepadButtonReload) {
+            gamepadButtonReload = false;
+        }
+        
+        if (videoPlayerHtml.currentSrc !== "") {
+            if (gamepadButton(11)) {
                 if (window.fullScreen) {
                     document.exitFullscreen()
                 } else {
                     videoPlayerHtml.requestFullscreen();
                 }
-                gamepadButtonReload = true;
-            }
-        } else if (buttons[4].pressed) {
-            if (!gamepadButtonReload) {
+            } else if (gamepadButton(4)) {
                 changeVideo(-1, actualVideoName);
-                gamepadButtonReload = true;
-            }
-        } else if (buttons[5].pressed) {
-            if (!gamepadButtonReload) {
+            } else if (gamepadButton(5)) {
                 changeVideo(1, actualVideoName);
-                gamepadButtonReload = true;
-            }
-        } else if (buttons[6].value > 0.15 && videoPlayerHtml.currentSrc !== "") {
-            videoPlayerHtml.currentTime -= buttons[6].value * 8;
-        } else if (buttons[7].value > 0.15 && videoPlayerHtml.currentSrc !== "") {
-            videoPlayerHtml.currentTime += buttons[7].value * 8;
-        } else if (buttons[10].pressed && videoPlayerHtml.currentSrc !== "") {
-            if (!gamepadButtonReload) {
+            } else if (buttons[6].value > 0.15) {
+                videoPlayerHtml.currentTime -= buttons[6].value * 8;
+            } else if (buttons[7].value > 0.15) {
+                videoPlayerHtml.currentTime += buttons[7].value * 8;
+            } else if (buttons[10].pressed) {
                 if (videoPlayerHtml.paused) {
                     videoPlayerHtml.play();
                 } else {
                     videoPlayerHtml.pause();
                 }
-                gamepadButtonReload = true;
-            }
-        } else if (buttons[9].pressed && videoPlayerHtml.currentSrc !== "") {
-            if (!gamepadButtonReload) {
+            } else if (buttons[9].pressed) {
                 document.querySelector('div#video').style.display = 'none';
                 document.querySelector('video').src = "";
-                gamepadButtonReload = true;
+            } else {
+                gamepadButtonReload = false;
             }
-        } else if (buttons[6].value > 0.1) {
+        }        
+        
+        if (buttons[6].value > 0.1) {
             if (!gamepadButtonReload) {
                 if (document.activeElement === searchInput) {
                     searchInput.blur();
                 } else {
                     searchInput.focus();
                 }
-                gamepadButtonReload = true;
             }
         } else if (buttons[7].value > 0.1) {
             if (!gamepadButtonReload) {
                 searchInput.blur();
-                gamepadButtonReload = true;
                 socket.emit('search', {text:searchInput.value, path: actualPath});
             }
-        } else {
+        }
+        
+        if (buttons.every(e=>!e.pressed)){
             gamepadButtonReload = false;
             cursorButton = false;
             clearInterval(extraInterval);
             extraInterval = 0;
             extraSpeedCounter = 0;
-            gamepadButtons.groupA.fill(0,0,4);
+            gamepadButtons.groupA.fill(0, 0, 4);
         }
         
         if (opendedPdf) {
@@ -165,11 +157,9 @@ function loop() {
         
         if (lastGamepadCursor !== gamepadCursor) {
             lastGamepadCursor = gamepadCursor;
-            const htmlButtons = document.querySelectorAll('button.unit');
+            const htmlButtons = document.querySelectorAll('span.unit');
             htmlButtons.forEach((e,id)=>{
                 const name = e.attributes[0].nodeValue;
-                console.log(name.substring(name.indexOf("'")+1, name.indexOf("',")));
-                console.log(content[gamepadCursor].path);
                 if (name.substring(name.indexOf("'")+1, name.indexOf("',")) === content[gamepadCursor].path.replace(/\\/g,'\\\\')) {
                     htmlButtons[id].style.border = '1px solid blue';
                     if (window.scrollY+window.innerHeight < htmlButtons[id].offsetTop) {

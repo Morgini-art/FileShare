@@ -4,11 +4,43 @@ body {
 }
 
 input#search {
+    display: inline-block;
     margin-bottom: 5px;
-    width: 80%;
+    border: 1px solid black;
+    width: 400px;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+div#settings-window {
+    position: absolute;
+    background-color: white;
+}
+
+h2 {
+    margin-bottom: 0;
+}
+
+div#settings-window {
+    padding: 10px;
+    width: 500px;
+    border: 1px solid black;
+    border-radius: 4px;
+}
+
+button#submit:hover {
+    transition: all 0.25s;
+    background-color: rgb(214, 214, 214);
 }
 
 button#submit {
+    transition: all 0.25s;
+    display: inline-block;
+    border: 1px solid black;
+    background-color: white;
+    width: 59px;
+    padding: 1px 8px;
+    font-size: 12px;
     margin-left: 5px;
 }
 
@@ -40,20 +72,21 @@ div#ui {
 
 div#main {
     margin: 0 auto;
-    width: 500px;
-}
-
-button.ui {
-    transition: all 0.25s;
-    background-color: white;
-    border-radius: 0;
-    border: 1px solid black;
-    padding: 5px;
+    width: 470px;
 }
 
 button.ui:hover {
     transition: all 0.25s;
     background-color: rgb(214, 214, 214);
+}
+
+button.ui {
+    transition: all 0.25s;
+    line-height: 24px;
+    background-color: white;
+    border-radius: 0;
+    border: 1px solid black;
+    padding: 5px;
 }
 
 button.menu {
@@ -67,18 +100,28 @@ button.menu:hover {
     background-color: lightblue;
 }
 
-button.unit:hover {
+p.content > div.file-size {
+    color: red;
+/*    text-align: right;*/
+}
+
+p.content {
+    transition: all 0.25s;
+    background-color: white;
+    border-radius: 4px;
+}
+
+p.content:hover {
     transition: all 0.25s;
     background-color: rgb(214, 214, 214);
 }
 
-button.unit {
+span.unit {
+    display: inline-block;
     overflow-x: hidden;
     transition: all 0.25s;
-    background-color: white;
     text-align: left;
-    width: 400px;
-    border-radius: 4px;
+    width: 390px;
     border: 0;
     font-size: 14px;
 }
@@ -113,7 +156,7 @@ p#actual-path > span {
         width: 95%;
     }
     
-    button.unit {
+    span.unit {
         width: 80%;
     }
     

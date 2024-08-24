@@ -16,7 +16,7 @@
 <body>
     <div id="main">
         <h1>FileShare</h1>
-        <a href="index.html">Standard</a>
+        <a href="index.html">Standard version</a>
         <p id="gamepad-help">Gamepad status: not detected</p>
         <div id="ui">
             <p id="temp-help">Temporary memory usage: </p>
@@ -41,8 +41,8 @@
           <button class="video-player" onclick="document.querySelector('div#video').style.display = 'none'; document.querySelector('video').src=''">Close</button><br>
           <video src="" controls></video>
       </div>
-       <div id="audio">
-          <button class="audio-player" onclick="document.querySelector('div#audio').style.display = 'none'; document.querySelector('audio').src=''">Close</button><br>
+       <div id="audio" style="display: none">
+          <span id="audio-title">Tytuł</span><button class="audio-player" onclick="document.querySelector('div#audio').style.display = 'none'; document.querySelector('audio').src=''">Close</button><br>
           <audio src="" controls></audio>
       </div>
       <div id="image">

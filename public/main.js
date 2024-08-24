@@ -1,8 +1,10 @@
 const socket = io({transports: ['websocket']});
 
 let actualPath = '_main\\';
-if (document.cookie.split('=')[0] === 'last-path') {
-    actualPath = document.cookie.split('=')[1];
+const cookies = getCookies();
+
+if (cookies.lastpath !== undefined) {
+    actualPath = cookies.lastpath;
 }
 
 let content = [];
@@ -11,6 +13,15 @@ const settings = {
         autoplay: true
     }
 }
+
+
+if (cookies.lastpath !== undefined) {
+    actualPath = cookies.lastpath;
+}
+if (cookies.videoAutoplay !== undefined && cookies.videoAutoplay.length > 0) {
+    settings.video.autoplay = (cookies.videoAutoplay === 'true') ? true : false;
+}
+
 const database = {
     fileFormats: {
         video: ['mp4', 'mkv', 'avi'],
@@ -30,6 +41,7 @@ const imagePlayerHtml = document.querySelector('img#player');
 const videoDivHtml = document.querySelector('div#video');
 const audioDivHtml = document.querySelector('div#audio');
 const imageDivHtml = document.querySelector('div#image');
+const audioTitle = document.querySelector('span#audio-title');
 
 const progressDiv = document.querySelector('div#progress');
 const tempHtml = document.querySelector('p#temp-help');
@@ -37,11 +49,13 @@ const tempHtml = document.querySelector('p#temp-help');
 const searchButton = document.querySelector('button#submit');
 const searchInput = document.querySelector('input#search');
 
-searchButton.onclick = () => {
-    socket.emit('search', {text:searchInput.value, path: actualPath});
-};
+const settingsAutoplay = document.querySelector('.toggle-checkbox');
+const settingWindow = document.querySelector('div#settings-window');
 
-imagePlayerHtml.width = 1000;
+settingsAutoplay.addEventListener('change', e=>{
+    document.cookie = `videoAutoplay=${!settingsAutoplay.checked};max-age=31536000;path=/;SameSite=Lax`;
+    settings.video.autoplay = !settingsAutoplay.checked;
+});
 
 let contextMenuTarget;
 
@@ -56,6 +70,10 @@ document.body.addEventListener('mousedown', ()=>{
     }
 });
 
+searchButton.onclick = () => {
+    socket.emit('search', {text:searchInput.value, path: actualPath});
+};
+
 socket.on('temp-size', data=>{
     tempHtml.innerHTML = `Temporary memory usage: ${data.size}/${data.free} GB`;
 });
@@ -66,18 +84,17 @@ socket.on('connect', ()=>{
 });
 
 socket.on('reset-cookies', ()=>{
-    document.cookie = `last-path=_main\\;max-age=7200;path=/;SameSite=Lax`;
+    document.cookie = `lastpath=;max-age=7200;path=/;SameSite=Lax`;
 });
 
 socket.on('recieve-data', (data)=>{
-    console.info('Recieved list of files. Path:', data.path, ' Array:', data.list);
     const paths = data.path.split('\\');
     let mem = '';
     actualPathHtml.innerHTML = data.path;
     actualPath = data.path;
     content = data.list;
-    document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
-    let res = '<table>';
+    document.cookie = `lastpath=${actualPath.replace(/\\/g, '\\\\')};max-age=7200;path=/;SameSite=Lax`;
+    let res = '';
     
     const files = [];
     const folders = content.filter((e)=>{
@@ -89,11 +106,11 @@ socket.on('recieve-data', (data)=>{
     });
     
     for (const folder of folders) {
-        res += `<p><img src='ui/folder.png'><button onclick="enter('${folder.path.replace(/\\/g, '\\\\')}',0,'${folder.name}')" class="unit">${folder.name}</button></p>`;
+        res += `<p class="content" onclick="enter('${folder.path.replace(/\\/g, '\\\\')}',0,'${folder.name}')"><img src='ui/folder.png'><span class="unit">${folder.name}</span></p>`;
     }
     for (const file of files) {
         const percent = (file.points/data.list[0].points*100).toFixed(1);
-        res += `<p><img src='ui/file.png'><button onclick="enter('${file.path.replace(/\\/g, '\\\\')}',1,'${file.name}')" class="unit">${file.name}</button>${file.size}`;
+        res += `<p class="content" onclick="enter('${file.path.replace(/\\/g, '\\\\')}',1,'${file.name}')"><img src='ui/file.png'><span class="unit">${file.name}</span>${file.size}`;
         if (file.points!==undefined) {
             res+=` ${percent}%</p>`;
         } else {
@@ -161,7 +178,7 @@ function changeVideo(delta, name) {//TODO: When delta < 0 it doesn't takes neare
         return database.fileFormats.video.includes(e.name.split('.')[e.name.split('.').length-1]) && e.name !== name && direction;
     });
     if (firstSimilar < content.length && firstSimilar !== -1) {
-        document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
+        document.cookie = `lastpath=${actualPath.replace(/\\/g, '\\\\')};max-age=7200;path=/;SameSite=Lax`;
         socket.emit('request-file', {
             path: content[firstSimilar].path,
             name: content[firstSimilar].name
@@ -173,11 +190,10 @@ function changeVideo(delta, name) {//TODO: When delta < 0 it doesn't takes neare
 }
 
 function enter(path, type, name) {
-    console.log(path);
     if (type === 0) {
         sendRequest(path);
     } else {
-        document.cookie = `last-path=${actualPath};max-age=7200;path=/;SameSite=Lax`;
+        document.cookie = `lastpath=${actualPath.replace(/\\/g, '\\\\')};max-age=7200;path=/;SameSite=Lax`;
         socket.emit('request-file', {path:path, name:name});
     }
 }
@@ -213,18 +229,36 @@ function builtInAudioPlayer(data) {
     const {path, name} = data;
     
     audioPlayerHtml.src = path;
-    audioDivHtml.style.left = (window.innerWidth - 300) / 2 + 'px';
-    audioDivHtml.style.top = '50px';
+    audioDivHtml.style.margin = '0 auto';
+    audioDivHtml.style.width = 'fit-content';
+    audioDivHtml.style.top = '210px';
+    audioDivHtml.style.position = 'absolute';
     audioDivHtml.style.display = 'block';
+    audioTitle.innerHTML = name;
+    audioDivHtml.style.left = `${(window.innerWidth-audioDivHtml.offsetWidth)/2}px`;
 }
 
 function builtInImagePlayer(data) {
     const {path, name} = data;
     
-    imagePlayerHtml.src = path;
-    imageDivHtml.style.left = '0px';
-    imageDivHtml.style.top = '0px';
     imageDivHtml.style.display = 'block';
+    imageDivHtml.style.top = '210px';
+    imagePlayerHtml.src = path;
+    
+    imagePlayerHtml.onload = () => {
+        const imageW = imagePlayerHtml.naturalWidth;
+        const imageH = imagePlayerHtml.naturalHeight;
+        if (imageW+250 > window.innerWidth) {
+            const scaleX = (imageW+250)/window.innerWidth;
+            imagePlayerHtml.width = imageW/scaleX;
+            imagePlayerHtml.height = imageH/scaleX;
+        } else {
+            imagePlayerHtml.width = imageW;
+            imagePlayerHtml.height = imageH;
+        }
+        
+        imageDivHtml.style.left = (window.innerWidth-imagePlayerHtml.width)/2+'px';
+    };
 }
 
 function undo() {
@@ -238,6 +272,25 @@ function clearTemp() {
 }
 
 function sendRequest(path) {
-    console.warn('REQUEST:', path);
     socket.emit('request', path);
+}
+
+function settingsWindow() {
+    settingWindow.style.display = 'block';
+    settingsAutoplay.checked = !settings.video.autoplay;
+    settingWindow.style.top = '210px';
+    settingWindow.style.position = 'absolute';
+    settingWindow.style.left = `${(window.innerWidth-settingWindow.offsetWidth)/2}px`;
+}
+
+function getCookies() {
+    const obj = {};
+    console.info('Get cookies function');
+    if (document.cookie.length > 0) {
+        document.cookie.split(';').forEach(cookie => {
+            const arr = cookie.split('=');
+            eval(`obj.${arr[0]} = "${arr[1]}"`); //TODO: Security
+        });
+    }
+    return obj;
 }

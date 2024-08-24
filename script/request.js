@@ -54,10 +54,8 @@ async function requestVideoFile(data, socket) {
     
     const codecs = await getCodecs(path);
     const fileSize = fs.lstatSync(path).size;
-    console.log(`File path: ${path}\nFile extension: ${extension}\nVideo codec:${codecs.video}\nAudio codec:${codecs.audio}`);
     
     if (extension === 'mkv' && !database.codecs.audio.includes(codecs.audio)) {
-        console.log('Mkv file with incompatible audio codec.');
         ffmpeg()
             .input(path)
             .videoCodec('copy')
@@ -73,7 +71,7 @@ async function requestVideoFile(data, socket) {
             })
             .save(`public\\temp\\${data.name}`);
     } else if (extension === 'avi') {
-        console.log('Incomatible avi format.');
+        console.info('Incomatible avi format.');
         const extension = split[split.length - 1];
         const newName = data.name.replace(extension, 'mp4');
         
@@ -96,7 +94,7 @@ async function requestVideoFile(data, socket) {
             .input(path)
             .withAudioCodec('libmp3lame')
             .on('progress', progress => {
-                console.log((progress.targetSize * 100000 / fileSize).toFixed(2));
+                //console.log((progress.targetSize * 100000 / fileSize).toFixed(2));
                 socket.emit('processing-progress', (progress.targetSize * 1000 / fileSize).toFixed(2));
             })
             .on('end', function () {

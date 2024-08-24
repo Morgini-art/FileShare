@@ -6,16 +6,15 @@ function search(data, socket) {
     const read = readAll(path);
     
     read.then((indexes)=>{
-        console.log(indexes);
-        console.log('Function: readAll took:', performance.now()-start);
+        //console.log(indexes);
+        //console.log('Function: readAll took:', performance.now()-start);
         
-            console.log('Search request.');
-        console.log('Search for: ', text);
-            console.log('Indexes count: ', indexes.length);
+        console.info('Search request.');
+        console.info('Search for: ', text);
+        console.info('Indexes count: ', indexes.length);
     
         const textArr = text.toLowerCase().split(' ');
     
-        const s2 = performance.now();
         const results = indexes.filter(file => {
             const d = file.name.lastIndexOf('.');
             const name = (d !== -1) ? file.name.substring(d, -1) : file.name;
@@ -34,7 +33,6 @@ function search(data, socket) {
                 return good.some((m)=>m === file.path) && index === arr.length - 1;
             });
         });
-        console.log('Function: filtering took:', performance.now()-s2);
         results.sort((a, b)=>{
             if (a.points < b.points) {
                 return 1;
