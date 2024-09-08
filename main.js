@@ -10,6 +10,31 @@ const {search} = require('./script/search');
 const {getDiscFreeSpace, getTempFolderStats} = require('./script/disk');
 const {requestVideoFile, request} = require('./script/request');
 
+
+let history;
+
+function loadHistory() {
+    history = JSON.parse(fs.readFileSync(path.join(__dirname,'history.json'), {encoding: 'utf-8'})).history;
+
+    history.forEach(obj=>{
+        obj.date = new Date(obj.date);
+    })
+}
+
+function clearHistory() {
+    console.log('clear')
+    saveHistory([]);
+}
+
+function saveHistory(array) {
+    console.log(array);
+    fs.writeFileSync(path.join(__dirname,'history.json'), JSON.stringify({history:array}));
+}
+
+loadHistory();
+console.log('History', history);
+
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {transports:['websocket'], maxHttpBufferSize: 8 * 1024 * 1024});
@@ -22,9 +47,12 @@ io.on('connection', (socket) => {
         if (req.default !== undefined) {
             socket.emit('recieve-data', {list:req.default, path: config.mount});
             socket.emit('reset-cookies');
+            history.push({path: config.mount, date:new Date(), type:0});
         } else {
             socket.emit('recieve-data', {list:req, path: path});
+            history.push({path: path, name: path.split('\\')[path.split('\\').length-1],type:0, date:new Date()});
         }
+        saveHistory(history);
     });
     
     socket.on('search', data=>{
@@ -33,6 +61,10 @@ io.on('connection', (socket) => {
     
     socket.on('error', (err) => {
         console.error('Socket Error:', err);
+    });
+    
+    socket.on('clear-history', ()=>{
+        clearHistory();
     });
     
     socket.on('request-file', (data) => {
@@ -49,6 +81,8 @@ io.on('connection', (socket) => {
                     console.info('Copying file has been completed');
                 });
             }
+            history.push({path:data.path, type:1, name:data.name, date: new Date()});
+            saveHistory(history);
         });
     });
     
@@ -59,6 +93,11 @@ io.on('connection', (socket) => {
         }
         socket.emit('temp-size', getTempFolderStats());
     });
+    
+    socket.on('get-history', ()=> {
+        loadHistory();
+        socket.emit('history-data', history);
+    })
 });
 
 app.use(express.static(path.join(__dirname, 'public')))

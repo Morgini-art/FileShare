@@ -14,12 +14,15 @@ const settings = {
     }
 }
 
-
 if (cookies.lastpath !== undefined) {
     actualPath = cookies.lastpath;
 }
 if (cookies.videoAutoplay !== undefined && cookies.videoAutoplay.length > 0) {
     settings.video.autoplay = (cookies.videoAutoplay === 'true') ? true : false;
+}
+
+function clearHistory() {
+    socket.emit('clear-history');
 }
 
 const database = {
@@ -29,6 +32,10 @@ const database = {
         audio: ['wav', 'mp3']
     }
 };
+
+function openHistory() {
+    socket.emit('get-history');
+}
 
 const actualPathHtml = document.querySelector('p#actual-path');
 const contentHtml = document.querySelector('div#content');
@@ -74,6 +81,28 @@ searchButton.onclick = () => {
     socket.emit('search', {text:searchInput.value, path: actualPath});
 };
 
+socket.on('history-data', data=>{
+    let res = '';
+    console.log(data);
+    
+    for (let i = data.length -1; i > 0; i--) {
+        const el = data[i];
+        console.log(el);
+        el.date = new Date(el.date);
+        if (el.type === 0) {
+            res += `<p class="content" onclick="enter('${el.path.replace(/\\/g, '\\\\')}',1,'${el.name}')"><img src='ui/folder.png'><span class="unit">${el.name}</span>${el.date.getHours()}:${el.date.getMinutes()}:${el.date.getSeconds()}`;
+        } else {
+            const {date} = el;
+            res += `<p class="content" onclick="enter('${el.path.replace(/\\/g, '\\\\')}',1,'${el.name}')"><img src='ui/file.png'><span class="unit">${el.name}</span>${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+        }
+        
+    }
+    
+    
+    
+    contentHtml.innerHTML = res;
+});
+
 socket.on('temp-size', data=>{
     tempHtml.innerHTML = `Temporary memory usage: ${data.size}/${data.free} GB`;
 });
@@ -109,8 +138,13 @@ socket.on('recieve-data', (data)=>{
         res += `<p class="content" onclick="enter('${folder.path.replace(/\\/g, '\\\\')}',0,'${folder.name}')"><img src='ui/folder.png'><span class="unit">${folder.name}</span></p>`;
     }
     for (const file of files) {
+        let icon = `<img src='ui/file.png'>`;
+        const ext = file.name.split('.')[file.name.split('.').length-1];
+        if (ext === 'mp4' || ext === 'avi' || ext === 'mkv') {
+            icon = `<img width="16px" src='ui/video.svg'>`;
+        }
         const percent = (file.points/data.list[0].points*100).toFixed(1);
-        res += `<p class="content" onclick="enter('${file.path.replace(/\\/g, '\\\\')}',1,'${file.name}')"><img src='ui/file.png'><span class="unit">${file.name}</span>${file.size}`;
+        res += `<p class="content" onclick="enter('${file.path.replace(/\\/g, '\\\\')}',1,'${file.name}')">${icon}<span class="unit">${file.name}</span>${file.size}`;
         if (file.points!==undefined) {
             res+=` ${percent}%</p>`;
         } else {

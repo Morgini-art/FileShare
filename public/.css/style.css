@@ -81,6 +81,7 @@ button.ui:hover {
 }
 
 button.ui {
+    margin-bottom: 5px;
     transition: all 0.25s;
     line-height: 24px;
     background-color: white;
